@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -36,7 +35,7 @@ class UserResource extends Resource
                     ->tel()
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name')
+                Forms\Components\Select::make('roles')->multiple()->relationship('roles', 'name'),
             ]);
     }
 
