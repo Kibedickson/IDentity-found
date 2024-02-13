@@ -60,6 +60,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Dashboard',
+                'Documents',
                 'Roles and Permissions',
                 'Settings',
             ])

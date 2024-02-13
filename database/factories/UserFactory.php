@@ -33,11 +33,14 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
         ];
     }
+
     public function assignUserRole(): static
     {
         return $this
             ->afterCreating(function (User $user) {
-                if (!$user->hasRole('Super Admin')) $user->assignRole('User');
+                if (! $user->hasRole('Super Admin')) {
+                    $user->assignRole('User');
+                }
             });
     }
 
