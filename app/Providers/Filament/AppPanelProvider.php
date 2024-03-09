@@ -30,6 +30,9 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
+            ->spa()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->login()
             ->registration(Register::class)
             ->colors([

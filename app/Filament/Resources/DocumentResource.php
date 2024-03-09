@@ -34,7 +34,7 @@ class DocumentResource extends Resource
 
     protected static ?string $navigationGroup = 'Documents';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -72,6 +72,9 @@ class DocumentResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(),
                 TextColumn::make('document_number')->searchable(),
                 TextColumn::make('document_name')
                     ->wrap(),
@@ -95,7 +98,9 @@ class DocumentResource extends Resource
                     RestoreBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession();
     }
 
     public static function getPages(): array
