@@ -19,6 +19,14 @@ class NotificationResource extends Resource
 
     protected static ?string $navigationLabel = 'Notifications';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::query()
+            ->where('notifiable_id', auth()->id())
+            ->whereNull('read_at')
+            ->count();
+    }
+
 
     public static function table(Table $table): Table
     {
@@ -35,8 +43,10 @@ class NotificationResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->tooltip('View Document')
-                    ->url(fn(DatabaseNotification $record): string => DocumentResource::getUrl('index', ['tableSearch' => $record->data['document_id']]))
-                    ->openUrlInNewTab(),
+                    ->url(function (DatabaseNotification $record): string {
+                        $record->markAsRead();
+                        return DocumentResource::getUrl('index', ['tableSearch' => $record->data['document_id']]);
+                    }),
                 Tables\Actions\Action::make('read')
                     ->icon('heroicon-o-check-circle')
                     ->iconButton()
@@ -58,5 +68,14 @@ class NotificationResource extends Resource
         return [
             'index' => Pages\ManageNotifications::route('/'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+        return parent::getEloquentQuery()
+            ->when(!$user->isSuperAdmin(), function (Builder $query) use ($user) {
+                $query->where('notifiable_id', $user->id);
+            });
     }
 }

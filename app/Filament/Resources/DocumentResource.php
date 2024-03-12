@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\DocumentStatusEnum;
 use App\Enums\DocumentTypeEnum;
 use App\Filament\Resources\DocumentResource\Pages;
 use App\Models\Document;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteAction;
@@ -23,6 +26,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Notifications\DatabaseNotification;
 
 class DocumentResource extends Resource
 {
@@ -55,12 +59,6 @@ class DocumentResource extends Resource
 
                 TextInput::make('location')
                     ->required(),
-
-                Select::make('type')
-                    ->options(DocumentTypeEnum::class)
-                    ->searchable()
-                    ->required()
-                    ->native(false),
                 SpatieMediaLibraryFileUpload::make('files')
                     ->multiple()
                     ->reorderable()
@@ -80,27 +78,32 @@ class DocumentResource extends Resource
                     ->wrap(),
                 TextColumn::make('location'),
                 TextColumn::make('category.name'),
-                TextColumn::make('user.name'),
-                TextColumn::make('claimUser.name')->name('Claimed By'),
-                TextColumn::make('type'),
+                TextColumn::make('user.name')->label('Added By'),
+                TextColumn::make('claimUser.name')->label('Claimed By'),
                 TextColumn::make('status'),
                 SpatieMediaLibraryImageColumn::make('files'),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                ]),
-            ])
-            ->persistSearchInSession()
-            ->persistColumnSearchesInSession();
+                \Filament\Tables\Actions\Action::make('claim')
+                    ->label('Mark as Claimed')
+                    ->visible(fn(Document $record) => $record->status === DocumentStatusEnum::NOT_CLAIMED && $record->user_id === auth()->id())
+                    ->button()
+                    ->color('success')
+                    ->action(function (Document $record) {
+                        $notification = DatabaseNotification::where('data->document_id', $record->id)->first();
+                        $record->update([
+                            'status' => DocumentStatusEnum::CLAIMED,
+                            'claim_user_id' => $notification->data['user_id']
+                        ]);
+                        Notification::make()
+                            ->title('Document claimed successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
+                EditAction::make()->visible(fn(Document $record) => $record->status === DocumentStatusEnum::NOT_CLAIMED && $record->user_id === auth()->id()),
+                DeleteAction::make()->visible(fn(Document $record) => $record->status === DocumentStatusEnum::NOT_CLAIMED && $record->user_id === auth()->id()),
+            ]);
     }
 
     public static function getPages(): array
@@ -109,14 +112,17 @@ class DocumentResource extends Resource
             'index' => Pages\ListDocuments::route('/'),
             'create' => Pages\CreateDocument::route('/create'),
             'edit' => Pages\EditDocument::route('/{record}/edit'),
+            'view' => Pages\ViewDocument::route('/{record}/view'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
+        $user = auth()->user();
         return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+            ->when(!$user->isSuperAdmin(), function (Builder $query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhere('claim_user_id', $user->id);
+            });
     }
 }

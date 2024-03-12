@@ -22,11 +22,10 @@ class ManageFindDocuments extends ManageRecords
     protected function applySearchToTableQuery(Builder $query): Builder
     {
         $this->applyColumnSearchesToTableQuery($query);
-
-        if (!filled($this->getTableSearch())) {
+        $search = $this->getTableSearch();
+        if (!filled($search)) {
             return $query->where('id', null);
         }
-
-        return $query;
+        return $query->whereAny(['document_number', 'document_name', 'location'], 'LIKE', "%${search}%");
     }
 }

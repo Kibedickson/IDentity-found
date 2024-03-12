@@ -40,7 +40,7 @@ class FindDocumentResource extends Resource
                 TextColumn::make('document_name')
                     ->wrap()
                     ->searchable(),
-                TextColumn::make('location'),
+                TextColumn::make('location')->searchable(),
                 TextColumn::make('category.name'),
             ])
             ->actions([
@@ -51,17 +51,24 @@ class FindDocumentResource extends Resource
                     ->color('success')
                     ->action(function (Document $record) {
                         $documentNumber = $record->document_number;
-                        $phoneNumber = auth()->user()->phone;
+                        $user = auth()->user();
+                        $phoneNumber = $user->phone;
                         Notification::make()
                             ->title('Claim Document')
                             ->success()
                             ->body('A notification has been sent to the person who found the document.')
                             ->send();
-                        Notification::make()
+                         Notification::make()
                             ->success()
                             ->title("New Document Claimed")
                             ->body("Document ${documentNumber} has been claimed. Please contact the user through ${phoneNumber}. Once confirmed, please mark the document as 'claimed'.")
                             ->documentId($record->id)
+                             ->userId($user->id)
+                            ->actions([
+                                \Filament\Notifications\Actions\Action::make('view')
+                                    ->button()
+                                    ->url(NotificationResource::getUrl())
+                            ])
                             ->sendToDatabase($record->user);
                     })
             ])
@@ -74,8 +81,7 @@ class FindDocumentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('type', DocumentTypeEnum::LOST)
-            ->where('status', DocumentStatusEnum::PENDING);
+            ->where('status', DocumentStatusEnum::NOT_CLAIMED);
     }
 
     public static function getPages(): array

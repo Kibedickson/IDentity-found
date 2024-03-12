@@ -15,9 +15,9 @@ return new class extends Migration
             $table->string('document_number')->index();
             $table->string('document_name')->index();
             $table->string('location')->index();
-            $table->enum('type', ['lost', 'found']);
             $table->foreignId('claim_user_id')->nullable()->constrained('users');
-            $table->enum('status', ['pending', 'approved', 'rejected']);
+            $table->enum('status', ['claimed', 'not_claimed'])->default('not_claimed');
+            $table->foreignUuid('notification_id')->nullable()->constrained('notifications');
             $table->softDeletes();
             $table->timestamps();
         });

@@ -7,25 +7,22 @@ use Filament\Support\Contracts\HasLabel;
 
 enum DocumentStatusEnum: string implements HasColor, HasLabel
 {
-    case PENDING = 'pending';
-    case APPROVED = 'approved';
-    case REJECTED = 'rejected';
+    case CLAIMED = 'claimed';
+    case NOT_CLAIMED = 'not_claimed';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::PENDING => 'Pending',
-            self::APPROVED => 'Approved',
-            self::REJECTED => 'Rejected',
+            self::CLAIMED => 'Claimed',
+            self::NOT_CLAIMED => 'Not Claimed',
         };
     }
 
     public function getColor(): string|array|null
     {
         return match ($this) {
-            self::PENDING => 'warning',
-            self::APPROVED => 'success',
-            self::REJECTED => 'danger',
+            self::CLAIMED => 'success',
+            self::NOT_CLAIMED => 'warning',
         };
     }
 }
