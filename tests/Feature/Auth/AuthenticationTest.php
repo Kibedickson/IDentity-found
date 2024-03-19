@@ -1,73 +1,39 @@
 <?php
 
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
 use Livewire\Volt\Volt;
+use function Pest\Livewire\livewire;
 
 test('login screen can be rendered', function () {
-    $response = $this->get('/login');
+    $response = $this->get('app/login');
 
     $response
-        ->assertOk()
-        ->assertSeeVolt('pages.auth.login');
+        ->assertOk();
 });
 
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
-    $component = Volt::test('pages.auth.login')
-        ->set('form.email', $user->email)
-        ->set('form.password', 'password');
-
-    $component->call('login');
-
-    $component
-        ->assertHasNoErrors()
-        ->assertRedirect(RouteServiceProvider::HOME);
+    livewire(\Filament\Pages\Auth\Login::class)
+        ->fillForm([
+            'email' => $user->email,
+            'password' => 'password',
+        ])
+        ->call('authenticate')
+        ->assertHasNoFormErrors();
 
     $this->assertAuthenticated();
 });
 
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
-
-    $component = Volt::test('pages.auth.login')
-        ->set('form.email', $user->email)
-        ->set('form.password', 'wrong-password');
-
-    $component->call('login');
-
-    $component
-        ->assertHasErrors()
-        ->assertNoRedirect();
-
-    $this->assertGuest();
-});
-
-test('navigation menu can be rendered', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user);
-
-    $response = $this->get('/dashboard');
-
-    $response
-        ->assertOk()
-        ->assertSeeVolt('layout.navigation');
-});
-
-test('users can logout', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user);
-
-    $component = Volt::test('layout.navigation');
-
-    $component->call('logout');
-
-    $component
-        ->assertHasNoErrors()
-        ->assertRedirect('/');
+    livewire(\Filament\Pages\Auth\Login::class)
+        ->fillForm([
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])
+        ->call('authenticate')
+        ->assertHasErrors();
 
     $this->assertGuest();
 });
