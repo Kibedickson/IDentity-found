@@ -33,8 +33,8 @@ class NotificationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('data.body')->wrap(),
-                Tables\Columns\TextColumn::make('created_at')->date(),
-                Tables\Columns\TextColumn::make('read_at')->date(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime(),
+                Tables\Columns\TextColumn::make('read_at')->dateTime(),
 
             ])
             ->filters([
@@ -45,7 +45,7 @@ class NotificationResource extends Resource
                     ->tooltip('View Document')
                     ->url(function (DatabaseNotification $record): string {
                         $record->markAsRead();
-                        return DocumentResource::getUrl('index', ['tableSearch' => $record->data['document_id']]);
+                        return DocumentResource::getUrl('view', [$record->data['document_id']]);
                     }),
                 Tables\Actions\Action::make('read')
                     ->icon('heroicon-o-check-circle')
@@ -76,6 +76,7 @@ class NotificationResource extends Resource
         return parent::getEloquentQuery()
             ->when(!$user->isSuperAdmin(), function (Builder $query) use ($user) {
                 $query->where('notifiable_id', $user->id);
-            });
+            })
+            ->latest();
     }
 }

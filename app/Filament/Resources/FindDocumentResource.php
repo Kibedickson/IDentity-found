@@ -37,8 +37,7 @@ class FindDocumentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('document_number')->searchable(),
-                TextColumn::make('document_name')
-                    ->wrap()
+                TextColumn::make('category.name')
                     ->searchable(),
                 TextColumn::make('location')->searchable(),
                 TextColumn::make('category.name'),

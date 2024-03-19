@@ -26,6 +26,6 @@ class ManageFindDocuments extends ManageRecords
         if (!filled($search)) {
             return $query->where('id', null);
         }
-        return $query->whereAny(['document_number', 'document_name', 'location'], 'LIKE', "%${search}%");
+        return $query->whereAny(['document_number', 'location'], 'LIKE', "%{$search}%");
     }
 }

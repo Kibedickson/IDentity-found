@@ -15,7 +15,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Document extends Model implements HasMedia
 {
-    use HasUuids, InteractsWithMedia, SoftDeletes;
+    use HasUuids, InteractsWithMedia;
 
     protected $fillable = [
         'user_id',
@@ -23,13 +23,14 @@ class Document extends Model implements HasMedia
         'notification_id',
         'category_id',
         'document_number',
-        'document_name',
         'location',
         'status',
+        'type',
     ];
 
     protected $casts = [
         'status' => DocumentStatusEnum::class,
+        'type' => DocumentTypeEnum::class,
     ];
 
     public function user(): BelongsTo

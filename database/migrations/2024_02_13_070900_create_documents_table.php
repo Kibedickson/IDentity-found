@@ -13,10 +13,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignUuid('category_id')->constrained('categories');
             $table->string('document_number')->index();
-            $table->string('document_name')->index();
             $table->string('location')->index();
             $table->foreignId('claim_user_id')->nullable()->constrained('users');
             $table->enum('status', ['claimed', 'not_claimed'])->default('not_claimed');
+            $table->enum('type', ['lost', 'found']);
             $table->foreignUuid('notification_id')->nullable()->constrained('notifications');
             $table->softDeletes();
             $table->timestamps();
